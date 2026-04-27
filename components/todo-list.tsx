@@ -42,6 +42,14 @@ export default function TodoList() {
 
   return (
     <div>
+      {/* Title */}
+      <h1
+        className="text-3xl sm:text-4xl font-semibold mb-8 text-center"
+        style={{ color: "var(--text)" }}
+      >
+        My Tasks
+      </h1>
+
       {/* Input */}
       <div className="flex flex-col sm:flex-row gap-3 mb-8">
         <input
