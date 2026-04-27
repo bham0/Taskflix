@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #f3f4f6;
+  --card: #ffffff;
+  --text: #111827;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --ui-bg: #ffffff;
+  --sidebar-bg: #ffffff;
+  --btn-bg: #000000;
+  --btn-text: #ffffff;
+  --input-text: #a9a9a9;
+  --nav-active-bg: #f3f4f6;
+  --nav-active-text: #000000;
+  --nav-inactive-text: #000000;
+  --tab-active: #000000;
+  --tab-inactive: #6a7282;
+}
+
+.dark {
+  --bg: #101828;
+  --card: #1e2939;
+  --ui-bg: #1e2939;
+  --sidebar-bg: #1e2939;
+  --btn-bg: #364153;
+  --btn-text: #ffffff;
+  --ui: #4a5565;
+  --text: #ffffff;
+  --muted: #6a7282;
+  --border: #4a5565;
+  --input-text: #a9a9a9;
+  --nav-active-bg: #ffffff;
+  --nav-active-text: #000000;
+  --nav-inactive-text: #ffffff;
+  --tab-active: #ffffff;
+  --tab-inactive: #6a7282;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-poppins), sans-serif;
+}
+
+input,
+textarea {
+  color: var(--input-text);
+}
