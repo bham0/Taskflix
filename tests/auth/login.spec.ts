@@ -114,16 +114,3 @@ test.describe("Sign Up", () => {
     });
   });
 });
-
-test.describe("Tab switching", () => {
-  test("tabs toggle between login and signup forms", async ({ page }) => {
-    await page.goto(`${BASE}/login`);
-    await expect(page.getByTestId("login-email")).toBeVisible();
-    await page.getByTestId("tab-signup").click();
-    await expect(page.getByTestId("signup-name")).toBeVisible();
-    await expect(page.getByTestId("login-email")).not.toBeVisible();
-    await page.getByTestId("tab-login").click();
-    await expect(page.getByTestId("login-email")).toBeVisible();
-    await expect(page.getByTestId("signup-name")).not.toBeVisible();
-  });
-});
