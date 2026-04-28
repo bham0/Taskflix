@@ -8,6 +8,11 @@ type AuthState = {
     email: string,
     password: string,
   ) => "success" | "no_email" | "wrong_password";
+  signup: (
+    name: string,
+    email: string,
+    password: string,
+  ) => "success" | "already_exists";
   logout: () => void;
   rehydrate: () => void;
 };
@@ -17,14 +22,28 @@ const MOCK_USERS: { name: string; email: string; password: string }[] = [
   { name: "Jane Doe", email: "jane@mail.com", password: "jane123" },
 ];
 
+const userRegistry = [...MOCK_USERS];
+
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
 
   login: (email, password) => {
-    const found = MOCK_USERS.find((u) => u.email === email);
+    const found = userRegistry.find((u) => u.email === email);
     if (!found) return "no_email";
     if (found.password !== password) return "wrong_password";
     const user = { name: found.name, email: found.email };
+    localStorage.setItem("user", JSON.stringify(user));
+    document.cookie = `user=${JSON.stringify(user)}; path=/; max-age=86400`;
+    set({ user });
+    return "success";
+  },
+
+  signup: (name, email, password) => {
+    const exists = userRegistry.find((u) => u.email === email);
+    if (exists) return "already_exists";
+    const newUser = { name, email, password };
+    userRegistry.push(newUser);
+    const user = { name, email };
     localStorage.setItem("user", JSON.stringify(user));
     document.cookie = `user=${JSON.stringify(user)}; path=/; max-age=86400`;
     set({ user });

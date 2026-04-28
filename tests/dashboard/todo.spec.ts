@@ -1,21 +1,124 @@
 import { test, expect, type Page } from "@playwright/test";
 
+const BASE = "http://localhost:3000";
+
 async function login(page: Page) {
-  await page.goto("/login");
-
-  await page.getByPlaceholder("admin@mail.com").fill("admin@mail.com");
-  await page.getByPlaceholder("••••••••").fill("123456");
-
-  await page.getByRole("button", { name: "Sign In" }).click();
-
-  await expect(page).toHaveURL(/dashboard/);
+  await page.goto(`${BASE}/login`);
+  await page.getByTestId("login-email").fill("admin@mail.com");
+  await page.getByTestId("login-password").fill("123456");
+  await page.getByTestId("login-submit").click();
+  await expect(page).toHaveURL(/dashboard/, { timeout: 8000 });
 }
 
-test("todo flow", async ({ page }) => {
-  await login(page);
+test.describe("Todo App", () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+  });
 
-  await page.getByPlaceholder("Add todo").fill("Test todo");
-  await page.getByRole("button", { name: "Add" }).click();
+  test("adds a new todo and shows it in the list", async ({ page }) => {
+    await page.getByPlaceholder("Add new task").fill("Test todo");
+    await page.getByRole("button", { name: "Add" }).click();
+    await expect(page.getByText("Test todo")).toBeVisible();
+  });
 
-  await expect(page.getByText("Test todo")).toBeVisible();
+  test("adds todo via Enter key", async ({ page }) => {
+    await page.getByPlaceholder("Add new task").fill("Enter key todo");
+    await page.getByPlaceholder("Add new task").press("Enter");
+    await expect(page.getByText("Enter key todo")).toBeVisible();
+  });
+
+  test("empty input does not add a todo", async ({ page }) => {
+    const before = await page.locator('input[type="checkbox"]').count();
+    await page.getByRole("button", { name: "Add" }).click();
+    const after = await page.locator('input[type="checkbox"]').count();
+    expect(after).toBe(before);
+  });
+
+  test("marks a todo as completed", async ({ page }) => {
+    await page.getByPlaceholder("Add new task").fill("Complete me");
+    await page.getByRole("button", { name: "Add" }).click();
+    await expect(page.getByText("Complete me")).toBeVisible();
+    await page.locator('input[type="checkbox"]').last().check();
+    await expect(page.getByText("Complete me")).toHaveCSS(
+      "text-decoration-line",
+      "line-through",
+    );
+  });
+
+  test("deletes a todo", async ({ page }) => {
+    await page.getByPlaceholder("Add new task").fill("Delete me");
+    await page.getByRole("button", { name: "Add" }).click();
+    await expect(page.getByText("Delete me")).toBeVisible();
+
+    const todoRow = page
+      .locator("div")
+      .filter({ hasText: /^Delete me$/ })
+      .last();
+    await todoRow.getByRole("button").last().click();
+
+    await expect(page.getByText("Delete me")).not.toBeVisible();
+  });
+
+  test("edits a todo", async ({ page }) => {
+    await page.getByPlaceholder("Add new task").fill("Edit me");
+    await page.getByRole("button", { name: "Add" }).click();
+    await expect(page.getByText("Edit me")).toBeVisible();
+
+    const todoRow = page
+      .locator("div")
+      .filter({ hasText: /^Edit me$/ })
+      .last();
+    await todoRow.getByRole("button").first().click();
+
+    const editInput = todoRow.locator('input[type="text"]');
+    await editInput.clear();
+    await editInput.fill("Edited todo");
+
+    await todoRow.getByRole("button", { name: "Save" }).click();
+    await expect(page.getByText("Edited todo")).toBeVisible();
+    await expect(page.getByText("Edit me")).not.toBeVisible();
+  });
+
+  test.describe("Filter tabs", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.getByPlaceholder("Add new task").fill("Active task");
+      await page.getByRole("button", { name: "Add" }).click();
+      await page.getByPlaceholder("Add new task").fill("Done task");
+      await page.getByRole("button", { name: "Add" }).click();
+      await page.locator('input[type="checkbox"]').last().check();
+    });
+
+    test("Active filter shows only incomplete todos", async ({ page }) => {
+      await page.getByRole("button", { name: "Active" }).click();
+      await expect(page.getByText("Active task")).toBeVisible();
+      await expect(page.getByText("Done task")).not.toBeVisible();
+    });
+
+    test("Completed filter shows only done todos", async ({ page }) => {
+      await page.getByRole("button", { name: "Completed" }).click();
+      await expect(page.getByText("Done task")).toBeVisible();
+      await expect(page.getByText("Active task")).not.toBeVisible();
+    });
+
+    test("All filter shows every todo", async ({ page }) => {
+      await page.getByRole("button", { name: "Completed" }).click();
+      await page.getByRole("button", { name: "All" }).click();
+      await expect(page.getByText("Active task")).toBeVisible();
+      await expect(page.getByText("Done task")).toBeVisible();
+    });
+
+    test("remaining tasks count decrements when todo is completed", async ({
+      page,
+    }) => {
+      const countText = page
+        .locator("p")
+        .filter({ hasText: "Remaining tasks" });
+      const before = await countText.textContent();
+      await page.locator('input[type="checkbox"]').first().check();
+      const after = await countText.textContent();
+      const beforeNum = parseInt(before?.match(/\d+/)?.[0] ?? "0");
+      const afterNum = parseInt(after?.match(/\d+/)?.[0] ?? "0");
+      expect(afterNum).toBe(beforeNum - 1);
+    });
+  });
 });
