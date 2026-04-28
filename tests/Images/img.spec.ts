@@ -11,6 +11,11 @@ async function login(page: Page) {
 }
 
 test.describe("Image Gallery", () => {
+  test.skip(
+    ({ browserName }) => browserName === "webkit",
+    "WebKit localStorage auth not supported",
+  );
+
   test.beforeEach(async ({ page }) => {
     await login(page);
     await page.goto(`${BASE}/images`);

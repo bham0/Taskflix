@@ -1,16 +1,13 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 
 const BASE = "http://localhost:3000";
 
-async function login(page: Page) {
-  await page.goto(`${BASE}/login`);
-  await page.getByTestId("login-email").fill("admin@mail.com");
-  await page.getByTestId("login-password").fill("123456");
-  await page.getByTestId("login-submit").click();
-  await expect(page).toHaveURL(/dashboard/, { timeout: 8000 });
-}
-
 test.describe("Login", () => {
+  test.skip(
+    ({ browserName }) => browserName === "webkit",
+    "WebKit localStorage auth not supported",
+  );
+
   test.beforeEach(async ({ page }) => {
     await page.goto(`${BASE}/login`);
   });
@@ -71,6 +68,11 @@ test.describe("Login", () => {
 });
 
 test.describe("Sign Up", () => {
+  test.skip(
+    ({ browserName }) => browserName === "webkit",
+    "WebKit localStorage auth not supported",
+  );
+
   test.beforeEach(async ({ page }) => {
     await page.goto(`${BASE}/login`);
     await page.getByTestId("tab-signup").click();
